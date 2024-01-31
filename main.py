@@ -4,32 +4,43 @@ from bs4 import BeautifulSoup
 import json
 import time
 import re
+import codecs
 
 
-# def callback(data):
-#     try:
-#         if data.strip():  # ตรวจสอบว่าข้อมูลไม่ว่างเปล่า
-#             print("JSON Data = {}".format(data))
-#         else:
-#             print("Received empty data.")
-#     except json.JSONDecodeError as e:
-#         print("Error parsing JSON data: {}".format(e))
+def callback(data):
+    try:
+        corrected_json = re.sub(r"\'(.*?)\'", r'"\1"', data)
 
-url = '<script>var json={"id":3143,"method":"client.notifyEventStream","params":{"SID":513,"eventList":[{"Action":"Pulse","Code":"TrafficJunction","Data":{"Action":"Pulse","Class":"Traffic","Code":"TrafficJunction","CommInfo":{"Country":null,"ExtraPlates":null,"GPSInfo":{"Latitude":0.0,"Longitude":0.0},"RadarInfo":{"CoordinateX":0.0,"CoordinateY":0.0},"Seat":[{"SafeBelt":"Unknow","Type":"Main"},{"SafeBelt":"Unknow","Type":"Sub"}],"SnapCategory":"NonMotor","StandardVehicleType":"Unknown","VehicleTypeByFunc":"Unknown"},"CountInGroup":1,"CustomSeq":0,"DSTTune":0,"EventID":516,"EventSeq":516,"FrameSequence":2262629,"GroupID":175706653,"IndexInGroup":1,"JunctionDirection":"Obverse","Lane":2,"LocaleTime":"2024-01-30 14:34:55","MainSeat":"unknow","Mark":59,"Name":"TrafficTollGate0","NonMotor":{"BoundingBox":[2352,72,3856,2120],"Category":"NoMannedConvertibleTricycle","Color":"Blue","Image":null,"MainColor":[0,0,255,0],"NumOfCycling":1,"ObjectID":5995,"OriginalBoundingBox":[1176,20,1928,604],"Plate":{"BoundingBox":[0,0,0,0],"OriginalBoundingBox":null,"PlateColor":"Unknown","Text":""},"RiderList":[{"Age":0,"Angle":0,"Bag":0,"BoundingBox":[2352,72,3856,2120],"Cap":0,"CarrierBag":0,"Category":"NoMannedConvertibleTricycle","DownClothes":0,"FaceAttributes":null,"FeatureValid":true,"HairStyle":0,"HasHat":0,"Helmet":0,"LowerBodyColor":"Unknown","MainColor":[0,0,255,0],"MessengerBag":0,"NonMotorColor":"Blue","ObjectID":null,"RainCoat":1,"ShoulderBag":0,"Type":204,"Umbrella":0,"UniformStyle":2,"UpClothes":0,"UpperBodyColor":"Unknown","directionRun":1,"humanNum":1,"noMotorTripLineDirection":0}],"Speed":0},"Object":{"Action":"Appear","AxleCount":0,"BelongID":5995,"BoundingBox":[0,0,0,0],"Category":"Unknown","Center":[0,0],"Confidence":0,"FrameSequence":2262606,"MainColor":[254,254,252,0],"MainSeat":{"DriverCalling":"CallingUnknown","DriverSmoking":"SmokingUnknown","SafeBelt":"unknow"},"ObjectID":5995,"ObjectType":"Plate","RelativeID":5995,"SerialUUID":"","ShotFrame":true,"Source":545326653744.0,"Speed":0,"SpeedTypeInternal":0,"SubSeat":{"DriverCalling":"CallingUnknown","DriverSmoking":"SmokingUnknown","SafeBelt":"unknow"},"Text":"","TrackType":1},"PTS":42994650150.0,"RadarSpeedSetTime":0.0,"RadarSpeedSourceTime":0.0,"RealUTC":1706600095,"RemoteSnap":null,"RoadwayNumber":2,"RuleID":31,"Sequence":1,"Source":545326985584.0,"Speed":0,"SubSeat":"unknow","TextSource":0,"TimeZone":12,"TrafficCar":{"BoundingBox":[0,0,0,0],"CountInGroup":1,"Country":null,"CustomFlowDirection":"","CustomRoadwayDirection":"","DeviceAddress":null,"Direction":0,"DrivingDirection":["Leave","Car go out","Car come in"],"Event":"TrafficJunction","FlowDirection":3,"GroupID":175706653,"IndexInGroup":1,"Lane":2,"LowerSpeedLimit":60,"MachineGroup":null,"MachineName":"8M049B2PAJF3085","OverSpeedMargin":0,"PhysicalLane":1,"PlateColor":"Unknown","PlateType":"Unknown","RoadwayNo":"","RouteNo":"","Speed":0,"UTC":1706625295,"UnderSpeedMargin":10,"UpperSpeedLimit":70,"VehicleBoundingBox":[2352,72,3856,2120],"VehicleColor":"Blue","VehicleColorRGB":null,"VehicleSign":null,"VehicleSize":"Light-duty","ViolationCode":"","ViolationDesc":"ANPR","ViolationName":"ANPR"},"UTC":1706625295,"UTCMS":305,"Vehicle":{"Action":"Appear","BelongID":5995,"BoundingBox":[2352,72,3856,2120],"BrandYearText":"","CarLogoIndex":null,"CarSeriesIndex":null,"Category":"NoMannedConvertibleTricycle","Center":[3104,1096],"Confidence":160,"Extra":null,"FrameSequence":2262606,"FusionInfo":{"BelongID":5995,"CartPosX":0.0,"CartPosY":0.0,"GpsPosValid":0,"GpsPostion":{"Latitude":0.0,"Longitude":0.0},"ObjectSource":0,"RadarCoorXyValid":0,"Speed":0.0,"SpeedValid":0,"SpeedX":0.0,"SpeedY":0.0},"MainColor":null,"MainSeat":null,"ObjectID":5995,"ObjectType":"NonMotor","OriginalBoundingBox":[1176,20,1928,604],"RelativeID":5995,"SerialUUID":"","ShotFrame":true,"Source":545326653744.0,"Speed":0,"SpeedTypeInternal":0,"SubSeat":null,"Text":null},"ViolationSnapSource":0,"VsfGrpIdx":0},"Index":0}]},"session":"537478f7285075076ff055201d96d1a4"}parent.receiveMessage(json);</script>'
-corrected_json = re.sub(r'\'(.*?)\'', r'"\1"', url)
+        # หา substring ที่อยู่ใน "{}"
+        start_index = corrected_json.find("{")
+        end_index = corrected_json.rfind("}")
+        json_data = corrected_json[start_index : end_index + 1]
 
-# หา substring ที่อยู่ใน "{}"
-start_index = corrected_json.find('{')
-end_index = corrected_json.rfind('}')
-json_data = corrected_json[start_index:end_index+1]
+        # แปลงข้อมูล JSON เป็น dictionary ใน Python
+        data_dict = json.loads(json_data)
+        params_data = data_dict.get("params", {})
+        event_list = params_data.get("eventList", [])
+        for event_data in event_list:
+            data = event_data.get("Data", {})
+            traffic_car = data.get("TrafficCar", {})
+            vehicle = data.get("Vehicle", {})
 
-# แปลงข้อมูล JSON เป็น dictionary ใน Python
-data_dict = json.loads(json_data)
+            # ตรวจสอบว่ามีข้อมูล TrafficCar และ PlateNumber หรือไม่
+            if traffic_car and "PlateNumber" in traffic_car:
+                plate_number_bytes = traffic_car["PlateNumber"].encode("latin-1")
+                plate_number = plate_number_bytes.decode("utf-8")
 
-# ตรวจสอบข้อมูลที่ได้
-params_data = data_dict.get('params', {})
-print("this is param: ",params_data)
-
+                # สร้าง log ตามที่คุณต้องการ
+                log_data = {
+                    "plateNumber": plate_number,
+                    # "mainColor": vehicle.get("MainColor", ""),
+                    # เพิ่มข้อมูลอื่น ๆ ตามต้องการ
+                }
+                print("data =", log_data)
+            else:
+                print("PlateNumber is undefined")
+    except json.JSONDecodeError as e:
+        print("...")
 
 
 # Function to start listening to events
@@ -47,7 +58,7 @@ def start_listen_events():
     print(dahua.attach_event(["TrafficJunction"]))
 
     print("Starting event listener...")
-    # return dahua.listen_events(callback)
+    return dahua.listen_events(callback)
 
 
 def stop_listen_events():
