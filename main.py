@@ -22,21 +22,44 @@ def callback(data):
         event_list = params_data.get("eventList", [])
         for event_data in event_list:
             data = event_data.get("Data", {})
+
+            object = data.get("Object", {})
             traffic_car = data.get("TrafficCar", {})
-            vehicle = data.get("Vehicle", {})
+            vehicle = data.get("NonMotor", {})
+            riderList = vehicle.get("RiderList", [])
 
             # ตรวจสอบว่ามีข้อมูล TrafficCar และ PlateNumber หรือไม่
             if traffic_car and "PlateNumber" in traffic_car:
                 plate_number_bytes = traffic_car["PlateNumber"].encode("latin-1")
                 plate_number = plate_number_bytes.decode("utf-8")
 
+                vehicleSize = traffic_car.get("VehicleSize", "")
+                # ตรวจสอบว่ามี rider ใน riderList หรือไม่
                 # สร้าง log ตามที่คุณต้องการ
-                log_data = {
-                    "plateNumber": plate_number,
-                    # "mainColor": vehicle.get("MainColor", ""),
-                    # เพิ่มข้อมูลอื่น ๆ ตามต้องการ
-                }
-                print("data =", log_data)
+                province_bytes = object.get("Province", "").encode("latin-1")
+                # print(object)
+                province = province_bytes.decode("utf-8")
+
+                url = "http://localhost:8090/api/collections/dahua/records"
+                headers = {"Content-Type": "application/json"}
+                response = requests.post(
+                    url,
+                    headers=headers,
+                    data={
+                        "plateNumber": plate_number,
+                        "color": traffic_car.get("VehicleColor", ""),
+                        "province": province,
+                        "vehicleSize": vehicleSize,
+                    },
+                )
+
+                if response.status_code == 200:
+                    print("Data sent successfully to Pocketbase.")
+                else:
+                    print(
+                        "Failed to send data to Pocketbase. Status code:",
+                        response.status_code,
+                    )
             else:
                 print("PlateNumber is undefined")
     except json.JSONDecodeError as e:

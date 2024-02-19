@@ -104,7 +104,7 @@
                             "AxleCount": 0,
                             "BelongID": 5995,
                             "BoundingBox": [0, 0, 0, 0],
-                            "Category": "Unknown",
+                            "Category": "Unknown",  ##ประเภทรถ
                             "Center": [0, 0],
                             "Confidence": 0,
                             "FrameSequence": 2262606,
@@ -127,7 +127,7 @@
                                 "DriverSmoking": "SmokingUnknown",
                                 "SafeBelt": "unknow"
                             },
-                            "Text": "",
+                            "Text": "", ##ป้ายทะเบียน
                             "TrackType": 1
                         },
                         "PTS": 42994650150.0,
@@ -173,7 +173,7 @@
                             "VehicleBoundingBox": [2352, 72, 3856, 2120],
                             "VehicleColor": "Blue",
                             "VehicleColorRGB": null,
-                            "VehicleSign": null,
+                            "VehicleSign": null,  ##แสดง
                             "VehicleSize": "Light-duty",
                             "ViolationCode": "",
                             "ViolationDesc": "ANPR",
