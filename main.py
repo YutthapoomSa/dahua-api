@@ -11,7 +11,7 @@ app = FastAPI()
 @app.on_event("startup")
 async def startup_event():
     # Dynamically import and call the callback function from main22.py
-    local_function = importlib.import_module("main22")
+    local_function = importlib.import_module("callback")
     result = local_function.start_listen_events()
     print(result)
 
